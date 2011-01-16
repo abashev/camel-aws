@@ -23,8 +23,11 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.aws.AmazonClientFactory;
 import org.apache.camel.impl.ScheduledPollEndpoint;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class S3Endpoint extends ScheduledPollEndpoint {
+    private static final Log LOG = LogFactory.getLog(S3Endpoint.class);
 
     private S3Configuration configuration;
     private AmazonS3Client amazonS3Client;
@@ -35,11 +38,19 @@ public class S3Endpoint extends ScheduledPollEndpoint {
     }
 
     public Producer createProducer() throws Exception {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new S3Producer(this);
     }
 
     public Consumer createConsumer(Processor processor) throws Exception {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("creating consumer for endpoint:");// + stripCredentials(getEndpointUri()));
+        }
+
+        // check for required parameters
+
+        S3Consumer consumer = new S3Consumer(this, processor);
+        configureConsumer(consumer);
+        return consumer;
     }
 
     public boolean isSingleton() {
