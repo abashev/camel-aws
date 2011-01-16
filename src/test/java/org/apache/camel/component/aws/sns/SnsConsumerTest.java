@@ -16,9 +16,7 @@
  */
 package org.apache.camel.component.aws.sns;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.component.aws.sns.support.SnsSqsObject;
-import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -39,9 +37,7 @@ public class SnsConsumerTest {
 
     @Test
     public void testVerifyFails() throws Exception {
-        CamelContext context = new DefaultCamelContext();
-        
-        String validMessageJson = IOUtils.toString(context.getClassResolver().loadResourceAsStream("/invalid-message.json"));
+        String validMessageJson = IOUtils.toString(getClass().getResourceAsStream("/invalid-message.json"));
         JSONObject json = new JSONObject(validMessageJson);
 
         // introduce a change in the message
