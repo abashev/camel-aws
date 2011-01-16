@@ -17,12 +17,22 @@
 package org.apache.camel.component.aws.s3;
 
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.component.aws.AmazonClientFactory;
 import org.apache.camel.impl.ScheduledPollEndpoint;
 
 public class S3Endpoint extends ScheduledPollEndpoint {
+
+    private S3Configuration configuration;
+    private AmazonS3Client amazonS3Client;
+
+    public S3Endpoint(String uri, S3Component component, S3Configuration configuration) {
+        super(uri, component);
+        this.configuration = configuration;
+    }
 
     public Producer createProducer() throws Exception {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
@@ -34,5 +44,32 @@ public class S3Endpoint extends ScheduledPollEndpoint {
 
     public boolean isSingleton() {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public S3Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(S3Configuration configuration) {
+        this.configuration = configuration;
+    }
+
+    public void setAmazonS3Client(AmazonS3Client amazonS3Client) {
+        this.amazonS3Client = amazonS3Client;
+    }
+
+    public AmazonS3Client getAmazonS3Client() {
+        if (amazonS3Client == null) {
+            if (configuration.getAmazonS3Client() == null) {
+                amazonS3Client = createS3Client();
+            } else {
+                amazonS3Client = configuration.getAmazonS3Client();
+            }
+        }
+        return amazonS3Client;
+    }
+
+    private AmazonS3Client createS3Client() {
+        return AmazonClientFactory.createS3Client(configuration.getAccessKey(), configuration.getSecretKey());
     }
 }

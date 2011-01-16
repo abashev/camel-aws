@@ -19,6 +19,7 @@ package org.apache.camel.component.aws;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 
@@ -37,6 +38,15 @@ public final class AmazonClientFactory {
     private AmazonClientFactory() {
         // hide the constructor
     }
+
+    public static AmazonS3Client createS3Client(AWSCredentials credentials) {
+        return createS3Client(credentials.getAWSAccessKeyId(), credentials.getAWSSecretKey());
+    }
+
+    public static AmazonS3Client createS3Client(String accessKey, String secretKey) {
+        return new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), new ClientConfiguration().withProxyHost(getProxyHost()).withProxyPort(getProxyPort()));
+    }
+
 
     public static AmazonSNSClient createSNSClient(AWSCredentials credentials) {
         return createSNSClient(credentials.getAWSAccessKeyId(), credentials.getAWSSecretKey());

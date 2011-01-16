@@ -25,7 +25,19 @@ import org.apache.camel.impl.DefaultComponent;
 public class S3Component extends DefaultComponent {
 
     @Override
-    protected Endpoint createEndpoint(String s, String s1, Map<String, Object> stringObjectMap) throws Exception {
+    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
+        S3Configuration configuration = new S3Configuration();
+        setProperties(configuration, parameters);
+
+        // validate common parameters
+        if (configuration.getAmazonS3Client() == null && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
+            throw new IllegalArgumentException("AmazonS3Client or accessKey and secretKey must be set");
+        }
+
+        S3Endpoint endpoint = new S3Endpoint(uri, this, configuration);
+        endpoint.setConsumerProperties(parameters);
         return null;
     }
+
+
 }
