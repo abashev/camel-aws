@@ -19,10 +19,19 @@ package org.apache.camel.component.aws.s3;
 
 import java.util.Map;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
 public class S3Component extends DefaultComponent {
+
+    public S3Component() {
+        
+    }
+
+    public S3Component(CamelContext context) {
+        super(context);
+    }
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
@@ -36,7 +45,7 @@ public class S3Component extends DefaultComponent {
 
         S3Endpoint endpoint = new S3Endpoint(uri, this, configuration);
         endpoint.setConsumerProperties(parameters);
-        return null;
+        return endpoint;
     }
 
 
