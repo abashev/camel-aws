@@ -133,7 +133,7 @@ public class SnsConsumer extends ScheduledPollConsumer {
 
     public String getPolicy(String topicArn, String queueArn, String queueURL) throws Exception {
         // FIXME can make this more efficient
-        String s = IOUtils.toString(getEndpoint().getCamelContext().getClassResolver().loadResourceAsStream("/default-sqs-policy-template.json"));
+        String s = IOUtils.toString(getEndpoint().getCamelContext().getClassResolver().loadResourceAsStream("default-sqs-policy-template.json"));
         s = s.replace("$SNS_ARN", topicArn);
         s = s.replace("$SQS_ARN", queueArn);
         s = s.replace("$SQS_URL", new URI(queueURL).getPath());
