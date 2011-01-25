@@ -34,12 +34,9 @@ public class SubscribeByTopicNameAndQueueNameIntegrationTest extends AbstractUse
         SnsUri consumer = createUri().withTopicName(topicName).withQueueName(queueName);
         SnsUri producer = createUri().withTopicName(topicName);
 
-        SnsTester tester = new SnsTester(consumer, producer, context)
-            .withPreStartDelay(0)
-            .withPostStartDelay(POLICY_DELAY_MILLIS)
+        SnsTester tester = new SnsTester(sqsClient, consumer, producer, context)
             .withAcceptedMessage("subject-1", "message body-1")
-            .withAcceptedMessage("subject-2", "message body-2")
-            .withPostSendDelay(OTHER_DELAY_MILLIS);
+            .withAcceptedMessage("subject-2", "message body-2");
 
         doTest(tester);
     }

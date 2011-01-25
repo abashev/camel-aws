@@ -51,7 +51,7 @@ public abstract class DeleteUseCase extends AbstractUseCase {
     }
 
     protected void startAndStopRoute(SnsUri consumer) throws Exception {
-        SnsTester tester = new SnsTester(consumer, null, context);
+        SnsTester tester = new SnsTester(sqsClient, consumer, null, context);
 
         doTest(tester);
 

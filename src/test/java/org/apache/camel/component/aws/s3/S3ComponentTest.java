@@ -18,7 +18,9 @@ package org.apache.camel.component.aws.s3;
 
 
 import org.apache.camel.test.CamelTestSupport;
+import org.junit.Ignore;
 
+@Ignore
 public class S3ComponentTest extends CamelTestSupport {
 
 }

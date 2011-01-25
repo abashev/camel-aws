@@ -19,6 +19,8 @@ package org.apache.camel.component.aws.sns.integration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
@@ -33,6 +35,10 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
+import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
+
 /**
  * Helper class for testing the producing and consuming messages on the topic.
  * <p/>
@@ -42,21 +48,14 @@ import org.apache.commons.logging.LogFactory;
  * to use for the test is also configurable with the default route being one
  * without any filtering.
  * <p/>
- * There are three points in the test process that have the possibility for introducing
- * a delay (Thread.sleep). The main purpose for this delay is to allow for changes made
- * to a SQS policy to propagate. For example, there is a 90+ second delay on setting the
- * policy on a queue and having it take effect. The points for a delay are as follows:
- * - pre start: sleep before starting the context
- * - post start: sleep after starting the context
- * - post send: sleep after sending the messages
- *
+ * 
+ * The tester will continually poll the SQS queue prior to sending any messages to it
+ * until it sees that the queue's attributes include a policy that allows the SNS topic
+ * the send messages to it. 
+ * 
  */
 public class SnsTester {
     private static final Log LOG = LogFactory.getLog(SnsTester.class);
-
-    long preStartDelay;
-    long postStartDelay;
-    long postSendDelay;
 
     SnsUri consumerUri;
     SnsUri producerUri;
@@ -64,11 +63,13 @@ public class SnsTester {
     List<String[]> data = new LinkedList<String[]>();
     List<String> expectedMessages = new LinkedList<String>();
     RouteBuilder routeBuilder;
-
-    public SnsTester(SnsUri consumerUri, SnsUri producerUri, CamelContext context) {
+    AmazonSQSClient sqsClient;
+    
+    public SnsTester(AmazonSQSClient sqsClient, SnsUri consumerUri, SnsUri producerUri, CamelContext context) {
         this.consumerUri = consumerUri;
         this.producerUri = producerUri;
         this.context = context;
+        this.sqsClient = sqsClient;
     }
 
     protected Iterator<String[]> getMessages() {
@@ -95,67 +96,71 @@ public class SnsTester {
         return this;
     }
 
-    protected SnsTester withPreStartDelay(long preStartDelay) {
-        setPreStartDelay(preStartDelay);
-        return this;
-    }
-
-    protected SnsTester withPostStartDelay(long postStartDelay) {
-        setPostStartDelay(postStartDelay);
-        return this;
-    }
-
-    protected SnsTester withPostSendDelay(long postSendDelay) {
-        setPostSendDelay(postSendDelay);
-        return this;
-    }
-
-    protected long getPreStartDelay() {
-        return preStartDelay;
-    }
-
-    protected void setPreStartDelay(long preStartDelay) {
-        this.preStartDelay = preStartDelay;
-    }
-
-    protected long getPostStartDelay() {
-        return postStartDelay;
-    }
-
-    protected void setPostStartDelay(long postStartDelay) {
-        this.postStartDelay = postStartDelay;
-    }
-
-    protected long getPostSendDelay() {
-        return postSendDelay;
-    }
-
-    protected void setPostSendDelay(long postSendDelay) {
-        this.postSendDelay = postSendDelay;
-    }
-
     protected void send() throws Exception {
 
+        // create our route
         context.addRoutes(getRouteBuilder());
 
+        // setup the mock endpoint's expected values
         MockEndpoint sink = getMockEndpoint();
         sink.expectedBodiesReceivedInAnyOrder(getExpectedMessageBodies());
 
-        LOG.debug("pre-start-delay:" + getPreStartDelay());
-        Thread.sleep(getPreStartDelay());
-
         context.start();
 
-        LOG.debug("post-start-delay:" + getPostStartDelay());
-        Thread.sleep(getPostStartDelay());
+        LOG.debug("delaying sending of messages until SQS policy propagated");
+        SnsEndpoint endpoint = getConsumerEndpoint();
+        pollPolicy(endpoint.getConfiguration().getQueueUrl());
 
         sendBodies();
+    }
+    
+    /**
+     * Keeps polling the policy every second until we see the markers that indicate that permission 
+     * has been granted for the SNS topic to publish. This gives us the green light to either
+     * start the context or send the messages, depending on what stage we're at.
+     * 
+     * @param aQUrl
+     * @param aTimeout
+     * @param aTimeUnit
+     * @throws InterruptedException
+     */
+    protected void pollPolicy(String aQUrl) throws Exception {
+        GetQueueAttributesRequest getReq = new GetQueueAttributesRequest().withQueueUrl(aQUrl).withAttributeNames("Policy", "QueueArn");
+        long startTime = System.currentTimeMillis();
 
-        // assert that we get the message
-        LOG.debug("post-send-delay:" + getPostSendDelay());
-        Thread.sleep(getPostSendDelay());
+        int policiesSeen = 0;
+        int requiredPoliciesSeen = 5;
+        TimeUnit timeUnit = TimeUnit.SECONDS;
+        long timeout = 120;
+        
+        // keep looping until we hit our drop-dead timeout (2 minutes) or until we've seen the 
+        // policy for 5 times. This business about checking for 4 extra times is extra padding to
+        // ensure that all nodes have seen the policy propragation. 
+        while(System.currentTimeMillis()<(startTime + timeUnit.toMillis(timeout))) {
+            GetQueueAttributesResult response = sqsClient.getQueueAttributes(getReq);
+            Map<String, String> attribs = response.getAttributes();
+            String policy = attribs.get("Policy");
+            String qArn = attribs.get("QueueArn");
+            
+            LOG.debug("polled policy:" + policy);
+
+            if (policy != null && policy.contains(qArn+"/statementId")) {
+                if (policiesSeen == 0) {
+                    LOG.debug("policy propagated after:" + (System.currentTimeMillis()-startTime) + " millis");
+                }
+                policiesSeen++;
+                if (policiesSeen >= requiredPoliciesSeen)
+                    return;
+            }
+            Thread.sleep(1000);
+        }
+        throw new Exception("policy wasn't set prior to timeout");
     }
 
+    /**
+     * Returns the RouteBuilder used to exercise the code. Will lazily create a simple
+     * route w/o any filtering if not already configured with one.
+     */
     protected RouteBuilder getRouteBuilder() {
         if (routeBuilder == null) {
             return new RouteBuilder() {

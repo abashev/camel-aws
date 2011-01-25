@@ -29,17 +29,14 @@ public class FilterBySubjectIntegrationTest extends AbstractUseCase {
         final SnsUri consumer = createUri().withTopicName(topicName).withQueueName(queueName).withDelay(500);
         SnsUri producer = createUri().withTopicName(topicName);
 
-        SnsTester tester = new SnsTester(consumer, producer, context)
-            .withPreStartDelay(0)
-            .withPostStartDelay(POLICY_DELAY_MILLIS)
+        SnsTester tester = new SnsTester(sqsClient, consumer, producer, context)
             .withFilteredMessage("on the right subject", "message body-0")
             .withAcceptedMessage("ok-subject", "message body-1")
             .withAcceptedMessage("ok-subject", "message body-2")
             .withFilteredMessage("will get filtered", "message body-3")
             .withFilteredMessage("also filtered", "message body-4")
             .withAcceptedMessage("ok-subject", "message body-5")
-            .withAcceptedMessage("ok-subject", "message body-6")
-            .withPostSendDelay(OTHER_DELAY_MILLIS * 2);
+            .withAcceptedMessage("ok-subject", "message body-6");
 
         tester.setRouteBuilder(new RouteBuilder() {
 

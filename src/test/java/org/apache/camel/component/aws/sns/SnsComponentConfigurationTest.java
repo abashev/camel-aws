@@ -21,11 +21,12 @@ import com.amazonaws.services.sns.AmazonSNSClient;
 import org.apache.camel.impl.JndiRegistry;
 import org.apache.camel.impl.PropertyPlaceholderDelegateRegistry;
 import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
 
-
+@Ignore
 public class SnsComponentConfigurationTest extends CamelTestSupport {
 
     @Test

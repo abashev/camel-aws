@@ -48,7 +48,7 @@ public class SnsSqsObject {
     }
 
     public String getUnsubscribe() {
-        return getValue("Unsubscribe");
+        return getValue("UnsubscribeURL");
     }
 
     public String getMessage() {

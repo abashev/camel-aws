@@ -16,11 +16,27 @@
  */
 package org.apache.camel.component.aws.sns.integration;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.camel.component.aws.AmazonClientFactory;
+import org.apache.camel.component.aws.sns.SnsConsumer;
+import org.apache.camel.component.aws.sns.SnsEndpoint;
+import org.apache.camel.component.aws.sns.SnsUri;
+import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.PropertyConfigurator;
+import org.junit.After;
+import org.junit.Before;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -33,34 +49,18 @@ import com.amazonaws.services.sqs.model.CreateQueueResult;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
 import com.amazonaws.services.sqs.model.SetQueueAttributesRequest;
 
-import org.apache.camel.component.aws.AmazonClientFactory;
-import org.apache.camel.component.aws.sns.SnsConsumer;
-import org.apache.camel.component.aws.sns.SnsEndpoint;
-import org.apache.camel.component.aws.sns.SnsUri;
-import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.PropertyConfigurator;
-import org.junit.After;
-import org.junit.Before;
-
-import static org.junit.Assert.assertNotNull;
-
 // FIXME need test to show that the unsubscribe call is happening.
 
 public abstract class AbstractUseCase {
     private static final Log LOG = LogFactory.getLog(AbstractUseCase.class);
 
     protected static final String MOCK_SINK = "mock:sink";
-    static final long POLICY_DELAY_MILLIS = 120000;
-    static final long OTHER_DELAY_MILLIS = 10000;
 
     DefaultCamelContext context = new DefaultCamelContext();
     AmazonSNSClient client;
     AmazonSQSClient sqsClient;
-    String topicName = "final-project-topic-junit-" + UUID.randomUUID().toString();
-    String queueName = "final-project-queue-junit-" + UUID.randomUUID().toString();
+    String topicName = "topic-junit-" + UUID.randomUUID().toString();
+    String queueName = "queue-junit-" + UUID.randomUUID().toString();
     AWSCredentials credentials;
 
     String queueURL;
@@ -152,15 +152,15 @@ public abstract class AbstractUseCase {
         return new SnsUri(credentials);
     }
 
-    protected void doTest(SnsTester tester) throws Exception {
-        setTester(tester);
+    protected void doTest(SnsTester aTester) throws Exception {
+        setTester(aTester);
         tester.send();
 
         SnsEndpoint snsEndpoint = tester.getConsumerEndpoint();
         topicArn = snsEndpoint.getTopicArn();
         queueURL = snsEndpoint.getConfiguration().getQueueUrl();
 
-        tester.getMockEndpoint().assertIsSatisfied();
+        MockEndpoint.assertIsSatisfied(120, TimeUnit.SECONDS, tester.getMockEndpoint());
         context.stop();
     }
 }
