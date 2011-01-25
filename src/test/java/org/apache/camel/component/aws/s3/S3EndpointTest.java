@@ -27,9 +27,16 @@ public class S3EndpointTest extends CamelTestSupport {
     @Test
     public void createEndpointWithMinimalConfiguration() throws Exception {
         S3Component component = new S3Component(context);
-        S3Endpoint endpoint = (S3Endpoint) component.createEndpoint("aws-s3://MyQueue?accessKey=xxx&secretKey=yyy");
+        S3Endpoint endpoint = (S3Endpoint) component.createEndpoint("aws-s3://?accessKey=xxx&secretKey=yyy");
 
         assertEquals("xxx", endpoint.getConfiguration().getAccessKey());
         assertEquals("yyy", endpoint.getConfiguration().getSecretKey());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void createEndpointWithMissingCredentialsConfiguration() throws Exception {
+        S3Component component = new S3Component(context);
+        S3Endpoint endpoint = (S3Endpoint) component.createEndpoint("aws-s3://?secretKey=yyy");
+
     }
 }
