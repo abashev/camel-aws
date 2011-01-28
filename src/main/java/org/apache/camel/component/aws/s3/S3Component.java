@@ -19,13 +19,34 @@ package org.apache.camel.component.aws.s3;
 
 import java.util.Map;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
 public class S3Component extends DefaultComponent {
 
-    @Override
-    protected Endpoint createEndpoint(String s, String s1, Map<String, Object> stringObjectMap) throws Exception {
-        return null;
+    public S3Component() {
+        
     }
+
+    public S3Component(CamelContext context) {
+        super(context);
+    }
+
+    @Override
+    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
+        S3Configuration configuration = new S3Configuration();
+        setProperties(configuration, parameters);
+
+        // validate common parameters
+        if (configuration.getAmazonS3Client() == null && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
+            throw new IllegalArgumentException("AmazonS3Client or accessKey and secretKey must be set");
+        }
+
+        S3Endpoint endpoint = new S3Endpoint(uri, this, configuration);
+        endpoint.setConsumerProperties(parameters);
+        return endpoint;
+    }
+
+
 }
