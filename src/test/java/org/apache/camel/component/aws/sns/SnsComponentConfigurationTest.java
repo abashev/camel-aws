@@ -16,107 +16,72 @@
  */
 package org.apache.camel.component.aws.sns;
 
-
-import com.amazonaws.services.sns.AmazonSNSClient;
 import org.apache.camel.impl.JndiRegistry;
 import org.apache.camel.impl.PropertyPlaceholderDelegateRegistry;
 import org.apache.camel.test.junit4.CamelTestSupport;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.mockito.Mockito.mock;
-
-@Ignore
 public class SnsComponentConfigurationTest extends CamelTestSupport {
-
-    @Test
-    public void createEndpointWithPollingConsumerParameters() throws Exception {
-        SnsComponent component = new SnsComponent(context);
-        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://topicName/myTopicName?accessKey=xxx&secretKey=yyy&delay=1234&initialDelay=4321&useFixedDelay=true&queueName=myQueue");
-        SnsConsumer consumer = (SnsConsumer) endpoint.createConsumer(null);
-
-        assertEquals(1234, consumer.getDelay());
-        assertEquals(4321, consumer.getInitialDelay());
-        assertTrue(consumer.isUseFixedDelay());
-    }
-
+    
     @Test
     public void createEndpointWithMinimalConfiguration() throws Exception {
         SnsComponent component = new SnsComponent(context);
-        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://topicName/myTopicName?accessKey=xxx&secretKey=yyy");
-
-        assertEquals("myTopicName", endpoint.getConfiguration().getTopicName());
+        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://MyTopic?accessKey=xxx&secretKey=yyy");
+        
+        assertEquals("MyTopic", endpoint.getConfiguration().getTopicName());
         assertEquals("xxx", endpoint.getConfiguration().getAccessKey());
         assertEquals("yyy", endpoint.getConfiguration().getSecretKey());
         assertNull(endpoint.getConfiguration().getAmazonSNSClient());
-        assertNull(endpoint.getConfiguration().getAmazonSQSClient());
+        assertNull(endpoint.getConfiguration().getTopicArn());
         assertNull(endpoint.getConfiguration().getSubject());
-        assertNull(endpoint.getConfiguration().getQueueName());
+        assertNull(endpoint.getConfiguration().getAmazonSNSEndpoint());
     }
-
+    
     @Test
-    public void createEndpointWithConsumerConfigurationMissingQueueNameOrArn() throws Exception {
+    public void createEndpointWithMinimalConfigurationAndProvidedClient() throws Exception {
+        AmazonSNSClientMock mock = new AmazonSNSClientMock();
+        
+        ((JndiRegistry) ((PropertyPlaceholderDelegateRegistry) context.getRegistry()).getRegistry()).bind("amazonSNSClient", mock);
+        
         SnsComponent component = new SnsComponent(context);
-        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://topicName/myTopicName?accessKey=xxx&secretKey=yyy&initialDelay=300&delay=400");
-        try {
-            SnsConsumer consumer = (SnsConsumer) endpoint.createConsumer(null);
-        } catch (Exception e) {
-            String err = "Must provide either a queueName or queueARN";
-            assertTrue(e.toString().contains(err));
-            return;
-        }
-        fail("Missing QueueName or QueueARN not detected");
-
+        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://MyTopic?amazonSNSClient=#amazonSNSClient");
+        
+        assertEquals("MyTopic", endpoint.getConfiguration().getTopicName());
+        assertNull(endpoint.getConfiguration().getAccessKey());
+        assertNull(endpoint.getConfiguration().getSecretKey());
+        assertNull(endpoint.getConfiguration().getTopicArn());
+        assertNull(endpoint.getConfiguration().getSubject());
+        assertNull(endpoint.getConfiguration().getAmazonSNSEndpoint());
+        endpoint.start();
+        
+        assertEquals("arn:aws:sns:us-east-1:541925086079:MyTopic", endpoint.getConfiguration().getTopicArn());
+        
+        endpoint.stop();
     }
-
+    
     @Test
-    public void createEndpointWithConsumerConfiguration() throws Exception {
+    public void createEndpointWithMaximalConfiguration() throws Exception {
         SnsComponent component = new SnsComponent(context);
-        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://topicName/myTopicName?queueName=stockQueue&accessKey=xxx&secretKey=yyy&initialDelay=300&delay=400");
-
-        SnsConsumer consumer = (SnsConsumer) endpoint.createConsumer(null);
-
-        assertEquals("stockQueue", consumer.getEndpoint().getConfiguration().getQueueName());
+        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://MyTopic?amazonSNSEndpoint=sns.eu-west-1.amazonaws.com&accessKey=xxx&secretKey=yyy&subject=The+subject+message");
+        
+        assertEquals("MyTopic", endpoint.getConfiguration().getTopicName());
+        assertEquals("sns.eu-west-1.amazonaws.com", endpoint.getConfiguration().getAmazonSNSEndpoint());
+        assertEquals("xxx", endpoint.getConfiguration().getAccessKey());
+        assertEquals("yyy", endpoint.getConfiguration().getSecretKey());
+        assertNull(endpoint.getConfiguration().getTopicArn());
+        assertNull(endpoint.getConfiguration().getAmazonSNSClient());
+        assertEquals("The subject message", endpoint.getConfiguration().getSubject());
     }
-
-    @Test
-    public void createEndpointWithConsumerConfigurationWithoutSqsClientOrCredentials() throws Exception {
-        AmazonSNSClient client = mock(AmazonSNSClient.class);
-
-        ((JndiRegistry) ((PropertyPlaceholderDelegateRegistry) context.getRegistry()).getRegistry()).bind("amazonSNSClient", client);
-
-        SnsComponent component = new SnsComponent(context);
-        SnsEndpoint endpoint = (SnsEndpoint) component.createEndpoint("aws-sns://topicName/myTopicName?amazonSNSClient=#amazonSNSClient&queueName=foo&initialDelay=300&delay=400");
-
-        // check here instead of expected to ensure it's the SQS client that's reported missing
-        try {
-            SnsConsumer consumer = (SnsConsumer) endpoint.createConsumer(null);
-        } catch (Exception e) {
-            String err = "AmazonSQSClient or accessKey and secretKey must be set";
-            assertTrue(e.toString().contains(err));
-            return;
-        }
-        fail("Missing SQSClient not detected");
-    }
-
-
+    
     @Test(expected = IllegalArgumentException.class)
     public void createEndpointWithoutAccessKeyConfiguration() throws Exception {
         SnsComponent component = new SnsComponent(context);
-        component.createEndpoint("aws-sns://topicName/myTopic?secretKey=yyy");
+        component.createEndpoint("aws-sns://MyTopic?secretKey=yyy");
     }
-
+    
     @Test(expected = IllegalArgumentException.class)
     public void createEndpointWithoutSecretKeyConfiguration() throws Exception {
         SnsComponent component = new SnsComponent(context);
-        component.createEndpoint("aws-sns://topicName/myTopic?accessKey=yyy");
+        component.createEndpoint("aws-sns://MyTopic?accessKey=xxx");
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void createEndpointWithoutTopicConfiguration() throws Exception {
-        SnsComponent component = new SnsComponent(context);
-        component.createEndpoint("aws-sns://?accessKey=yyy&secretKey=xxx");
-    }
-
-
 }

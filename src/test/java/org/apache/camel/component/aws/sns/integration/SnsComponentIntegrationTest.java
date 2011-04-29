@@ -14,43 +14,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.camel.component.aws.sns;
+package org.apache.camel.component.aws.sns.integration;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
-import org.apache.camel.test.junit4.CamelSpringTestSupport;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.aws.sns.SnsConstants;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class SnsComponentSpringTest extends CamelSpringTestSupport {
+public class SnsComponentIntegrationTest extends CamelTestSupport {
     
     @Test
+    @Ignore("Must be manually tested. Provide your own accessKey and secretKey!")
     public void sendInOnly() throws Exception {
         Exchange exchange = template.send("direct:start", ExchangePattern.InOnly, new Processor() {
             public void process(Exchange exchange) throws Exception {
-                exchange.getIn().setHeader(SnsConstants.SUBJECT, "This is my subject text.");
+                exchange.getIn().setHeader(SnsConstants.SUBJECT, "This is my subject");
                 exchange.getIn().setBody("This is my message text.");
             }
         });
         
-        assertEquals("dcc8ce7a-7f18-4385-bedd-b97984b4363c", exchange.getIn().getHeader(SnsConstants.MESSAGE_ID));
+        assertNotNull(exchange.getIn().getHeader(SnsConstants.MESSAGE_ID));
     }
     
     @Test
+    @Ignore("Must be manually tested. Provide your own accessKey and secretKey!")
     public void sendInOut() throws Exception {
         Exchange exchange = template.send("direct:start", ExchangePattern.InOut, new Processor() {
             public void process(Exchange exchange) throws Exception {
-                exchange.getIn().setHeader(SnsConstants.SUBJECT, "This is my subject text.");
+                exchange.getIn().setHeader(SnsConstants.SUBJECT, "This is my subject");
                 exchange.getIn().setBody("This is my message text.");
             }
         });
         
-        assertEquals("dcc8ce7a-7f18-4385-bedd-b97984b4363c", exchange.getOut().getHeader(SnsConstants.MESSAGE_ID));
+        assertNotNull(exchange.getOut().getHeader(SnsConstants.MESSAGE_ID));
     }
-
-    @Override
-    protected ClassPathXmlApplicationContext createApplicationContext() {
-        return new ClassPathXmlApplicationContext("org/apache/camel/component/aws/sns/SnsComponentSpringTest-context.xml");
+    
+    protected RouteBuilder createRouteBuilder() throws Exception {
+        return new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("direct:start")
+                    .to("aws-sns://MyTopic?accessKey=xxx&secretKey=yyy");
+            }
+        };
     }
 }

@@ -24,13 +24,12 @@ import org.apache.camel.ExchangePattern;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.impl.JndiRegistry;
-import org.apache.camel.test.junit4.CamelTestSupport;
+import org.apache.camel.test.junit4.CamelSpringTestSupport;
 import org.junit.Test;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class S3ComponentTest extends CamelTestSupport {
+public class S3ComponentSpringTest extends CamelSpringTestSupport {
     
     @EndpointInject(uri = "direct:start")
     private ProducerTemplate template;
@@ -94,26 +93,9 @@ public class S3ComponentTest extends CamelTestSupport {
         assertEquals("3a5c8b1ad448bca04584ecb55b836264", message.getHeader(S3Constants.E_TAG));
         assertNull(message.getHeader(S3Constants.VERSION_ID));
     }
-    
-    @Override
-    protected JndiRegistry createRegistry() throws Exception {
-        JndiRegistry registry = super.createRegistry();
-        registry.bind("amazonS3Client", new AmazonS3ClientMock());
-        
-        return registry;
-    }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
-        return new RouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                from("direct:start")
-                    .to("aws-s3://mycamelbucket?amazonS3Client=#amazonS3Client&region=us-west-1");
-                
-                from("aws-s3://mycamelbucket?amazonS3Client=#amazonS3Client&region=us-west-1&maxMessagesPerPoll=5")
-                    .to("mock:result");
-            }
-        };
+    protected ClassPathXmlApplicationContext createApplicationContext() {
+        return new ClassPathXmlApplicationContext("org/apache/camel/component/aws/s3/S3ComponentSpringTest-context.xml");
     }
 }

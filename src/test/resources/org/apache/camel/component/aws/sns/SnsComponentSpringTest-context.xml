@@ -23,15 +23,9 @@
     <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
         <route>
             <from uri="direct:start"/>
-            <to uri="aws-sns://topicName/MyTopic?amazonSNSClient=#amazonSNSClient"/>
-        </route>
-
-        <route>
-            <from uri="aws-sns://topicName/MyTopic?queueName=myQueue&amp;amazonSNSClient=#amazonSNSClient&amp;amazonSQSClient=#amazonSQSClient"/>
-            <to uri="mock:result"/>
+            <to uri="aws-sns://MyTopic?amazonSNSClient=#amazonSNSClient"/>
         </route>
     </camelContext>
 
-    <bean id="amazonSQSClient" class="org.apache.camel.component.aws.sns.AmazonMockFactory" factory-method="getAmazonSQSClient"/>
-    <bean id="amazonSNSClient" class="org.apache.camel.component.aws.sns.AmazonMockFactory" factory-method="getAmazonSNSClient"/>
+    <bean id="amazonSNSClient" class="org.apache.camel.component.aws.sns.AmazonSNSClientMock"/>
 </beans>

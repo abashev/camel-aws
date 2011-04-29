@@ -19,11 +19,12 @@ package org.apache.camel.component.aws.sns;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
-import org.apache.camel.test.junit4.CamelSpringTestSupport;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.impl.JndiRegistry;
+import org.apache.camel.test.junit4.CamelTestSupport;
 import org.junit.Test;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class SnsComponentSpringTest extends CamelSpringTestSupport {
+public class SnsComponentTest extends CamelTestSupport {
     
     @Test
     public void sendInOnly() throws Exception {
@@ -48,9 +49,23 @@ public class SnsComponentSpringTest extends CamelSpringTestSupport {
         
         assertEquals("dcc8ce7a-7f18-4385-bedd-b97984b4363c", exchange.getOut().getHeader(SnsConstants.MESSAGE_ID));
     }
+    
+    @Override
+    protected JndiRegistry createRegistry() throws Exception {
+        JndiRegistry registry = super.createRegistry();
+        registry.bind("amazonSNSClient", new AmazonSNSClientMock());
+        
+        return registry;
+    }
 
     @Override
-    protected ClassPathXmlApplicationContext createApplicationContext() {
-        return new ClassPathXmlApplicationContext("org/apache/camel/component/aws/sns/SnsComponentSpringTest-context.xml");
+    protected RouteBuilder createRouteBuilder() throws Exception {
+        return new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("direct:start")
+                    .to("aws-sns://MyTopic?amazonSNSClient=#amazonSNSClient");
+            }
+        };
     }
 }
