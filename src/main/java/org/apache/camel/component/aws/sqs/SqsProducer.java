@@ -24,18 +24,18 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.NoFactoryAvailableException;
 import org.apache.camel.impl.DefaultProducer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Producer which sends messages to the Amazon Web Service Simple Queue Service
  * <a href="http://aws.amazon.com/sqs/">AWS SQS</a>
  * 
- * @version $Revision: $
+ * @version 
  */
 public class SqsProducer extends DefaultProducer {
     
-    private static final transient Log LOG = LogFactory.getLog(SqsProducer.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(SqsProducer.class);
     
     public SqsProducer(SqsEndpoint endpoint) throws NoFactoryAvailableException {
         super(endpoint);
