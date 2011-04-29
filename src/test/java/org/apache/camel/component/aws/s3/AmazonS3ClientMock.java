@@ -27,8 +27,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.HttpMethod;
-import com.amazonaws.Request;
-import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ResponseMetadata;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -75,9 +73,9 @@ import com.amazonaws.services.s3.model.UploadPartResult;
 import com.amazonaws.services.s3.model.VersionListing;
 
 public class AmazonS3ClientMock extends AmazonS3Client {
-    
-    List<S3Object> objects = new ArrayList<S3Object>();    
-    
+
+    List<S3Object> objects = new ArrayList<S3Object>();
+
     public AmazonS3ClientMock() {
         super(null);
     }
@@ -93,7 +91,7 @@ public class AmazonS3ClientMock extends AmazonS3Client {
     }
 
     @Override
-    public VersionListing listVersions(String bucketName, String prefix, String keyMarker, String versionIdMarker, String delimiter, Integer maxKeys) 
+    public VersionListing listVersions(String bucketName, String prefix, String keyMarker, String versionIdMarker, String delimiter, Integer maxKeys)
         throws AmazonClientException, AmazonServiceException {
         throw new UnsupportedOperationException();
     }
@@ -117,12 +115,12 @@ public class AmazonS3ClientMock extends AmazonS3Client {
     public ObjectListing listObjects(ListObjectsRequest listObjectsRequest) throws AmazonClientException, AmazonServiceException {
         ObjectListing objectListing = new ObjectListing();
         int capacity = listObjectsRequest.getMaxKeys();
-        
+
         for (int index = 0; index < objects.size() && index < capacity; index++) {
             S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
             s3ObjectSummary.setBucketName(objects.get(index).getBucketName());
             s3ObjectSummary.setKey(objects.get(index).getKey());
-            
+
             objectListing.getObjectSummaries().add(s3ObjectSummary);
         }
 
@@ -240,7 +238,7 @@ public class AmazonS3ClientMock extends AmazonS3Client {
                 return s3Object;
             }
         }
-        
+
         return null;
     }
 
@@ -291,7 +289,7 @@ public class AmazonS3ClientMock extends AmazonS3Client {
         s3Object.setKey(putObjectRequest.getKey());
         s3Object.setObjectContent(putObjectRequest.getInputStream());
         objects.add(s3Object);
-        
+
         PutObjectResult putObjectResult = new PutObjectResult();
         putObjectResult.setETag("3a5c8b1ad448bca04584ecb55b836264");
         return putObjectResult;
@@ -419,16 +417,6 @@ public class AmazonS3ClientMock extends AmazonS3Client {
 
     @Override
     public S3ResponseMetadata getCachedResponseMetadata(AmazonWebServiceRequest request) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected Request<Void> createRequest(String bucketName, String key, AmazonWebServiceRequest originalRequest) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected <T> void signRequest(Request<T> request, HttpMethodName methodName, String bucketName, String key) {
         throw new UnsupportedOperationException();
     }
 }
