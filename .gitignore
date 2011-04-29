@@ -1,5 +1,5 @@
 *.iml
 *.ipr
 *.iws
-.svn
+.*
 target
