@@ -16,17 +16,31 @@
  */
 package org.apache.camel.component.aws.s3;
 
-
 import com.amazonaws.services.s3.AmazonS3Client;
 
+/**
+ * The AWS S3 component configuration properties
+ * 
+ */
 public class S3Configuration implements Cloneable {
 
-    // common properties
     private String accessKey;
     private String secretKey;
     private AmazonS3Client amazonS3Client;
-
-
+    
+    private String bucketName;
+    private String region;
+    private boolean deleteAfterRead = true;
+    private String amazonS3Endpoint;
+    
+    public void setAmazonS3Endpoint(String amazonS3Endpoint) {
+        this.amazonS3Endpoint = amazonS3Endpoint;
+    }
+    
+    public String getAmazonS3Endpoint() {
+        return amazonS3Endpoint;
+    }
+    
     public String getAccessKey() {
         return accessKey;
     }
@@ -42,12 +56,36 @@ public class S3Configuration implements Cloneable {
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
     }
-
+    
     public AmazonS3Client getAmazonS3Client() {
         return amazonS3Client;
     }
 
     public void setAmazonS3Client(AmazonS3Client amazonS3Client) {
         this.amazonS3Client = amazonS3Client;
+    }
+
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public boolean isDeleteAfterRead() {
+        return deleteAfterRead;
+    }
+
+    public void setDeleteAfterRead(boolean deleteAfterRead) {
+        this.deleteAfterRead = deleteAfterRead;
     }
 }

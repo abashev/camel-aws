@@ -16,13 +16,12 @@
  */
 package org.apache.camel.component.aws.sns;
 
+/**
+ * Constants used in Camel AWS SNS module
+ *
+ */
 public interface SnsConstants {
-    String SNS_SUBJECT = "SNSSubject";
-    String SQS_MESSAGE_ID = "SNSMessageID";
-    String SQS_TIMESTAMP = "SNSTimeStamp";
-    String SQS_TOPIC_ARN = "SNSTopicArn";
-    String SQS_TYPE = "SNSType";
-    String SQS_UNSUBSCRIBE_URL = "SNSUnsubscribeURL";
-    String SQS_SIGNATURE = "SNSSignature";
-    String SQS_SIGNATURE_VERSION = "SNSSignatureVersion";
+    
+    String MESSAGE_ID = "CamelAwsSnsMessageId";
+    String SUBJECT = "CamelAwsSnsSubject";
 }

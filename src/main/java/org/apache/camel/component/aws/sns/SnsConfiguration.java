@@ -16,94 +16,33 @@
  */
 package org.apache.camel.component.aws.sns;
 
-
+/**
+ * The AWS SNS component configuration properties
+ * 
+ */
 import com.amazonaws.services.sns.AmazonSNSClient;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import org.apache.camel.RuntimeCamelException;
 
 public class SnsConfiguration implements Cloneable {
 
     // Common properties
-    private String topicArn;
     private String topicName;
-    private boolean deleteTopicOnStop;
     private AmazonSNSClient amazonSNSClient;
-    private AmazonSQSClient amazonSQSClient;
     private String accessKey;
     private String secretKey;
-
-    // Consumer only properties
-    private String queueName;
-    private String queueArn;
-    private boolean idempotent;
-    private boolean deleteQueueOnStop;
-    private boolean verify;
+    private String amazonSNSEndpoint;
 
     // Producer only properties
     private String subject;
+    private String topicArn;
 
-    // other properties (not settable from the URI)
-    private String queueUrl;
-
-    public SnsConfiguration copy() {
-        try {
-            SnsConfiguration newCopy = (SnsConfiguration) clone();
-            // override any properties where a reference copy isn't what we want
-            return newCopy;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeCamelException(e);
-        }
+    public void setAmazonSNSEndpoint(String awsSNSEndpoint) {
+        this.amazonSNSEndpoint = awsSNSEndpoint;
     }
-
-
-    public boolean isDeleteTopicOnStop() {
-        return deleteTopicOnStop;
+    
+    public String getAmazonSNSEndpoint() {
+        return amazonSNSEndpoint;
     }
-
-    public void setDeleteTopicOnStop(boolean deleteTopicOnStop) {
-        this.deleteTopicOnStop = deleteTopicOnStop;
-    }
-
-    public String getQueueName() {
-        return queueName;
-    }
-
-    public void setQueueName(String queueName) {
-        this.queueName = queueName;
-    }
-
-    public String getQueueArn() {
-        return queueArn;
-    }
-
-    public void setQueueArn(String queueArn) {
-        this.queueArn = queueArn;
-    }
-
-    public boolean isIdempotent() {
-        return idempotent;
-    }
-
-    public void setIdempotent(boolean idempotent) {
-        this.idempotent = idempotent;
-    }
-
-    public boolean isDeleteQueueOnStop() {
-        return deleteQueueOnStop;
-    }
-
-    public void setDeleteQueueOnStop(boolean deleteQueueOnStop) {
-        this.deleteQueueOnStop = deleteQueueOnStop;
-    }
-
-    public boolean isVerify() {
-        return verify;
-    }
-
-    public void setVerify(boolean verify) {
-        this.verify = verify;
-    }
-
+    
     public String getSubject() {
         return subject;
     }
@@ -119,7 +58,6 @@ public class SnsConfiguration implements Cloneable {
     public void setTopicArn(String topicArn) {
         this.topicArn = topicArn;
     }
-
 
     public String getAccessKey() {
         return accessKey;
@@ -145,22 +83,6 @@ public class SnsConfiguration implements Cloneable {
         this.amazonSNSClient = amazonSNSClient;
     }
 
-    public AmazonSQSClient getAmazonSQSClient() {
-        return amazonSQSClient;
-    }
-
-    public void setAmazonSQSClient(AmazonSQSClient amazonSQSClient) {
-        this.amazonSQSClient = amazonSQSClient;
-    }
-
-    public String getQueueUrl() {
-        return queueUrl;
-    }
-
-    public void setQueueUrl(String queueUrl) {
-        this.queueUrl = queueUrl;
-    }
-
     public String getTopicName() {
         return topicName;
     }
@@ -168,8 +90,15 @@ public class SnsConfiguration implements Cloneable {
     public void setTopicName(String topicName) {
         this.topicName = topicName;
     }
+    
+    @Override
+    public String toString() {
+        return "SnsConfiguration[topicName=" + topicName
+            + ", amazonSQSClient=" + amazonSNSClient
+            + ", accessKey=" + accessKey
+            + ", secretKey=xxxxxxxxxxxxxxx" 
+            + ", subject=" + subject
+            + ", topicArn=" + topicArn
+            + "]";
+    }
 }
-
-
-
-

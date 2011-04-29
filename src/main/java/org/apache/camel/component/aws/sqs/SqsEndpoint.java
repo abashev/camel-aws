@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Defines the <a href="http://camel.apache.org/aws.html">AWS SQS Endpoint</a>.  
  *
- * @version 
  */
 public class SqsEndpoint extends ScheduledPollEndpoint {
     
@@ -77,16 +76,12 @@ public class SqsEndpoint extends ScheduledPollEndpoint {
         CreateQueueRequest request = new CreateQueueRequest(configuration.getQueueName());
         request.setDefaultVisibilityTimeout(getConfiguration().getDefaultVisibilityTimeout() != null ? getConfiguration().getDefaultVisibilityTimeout() : null);
         
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Creating queue [" + configuration.getQueueName() + "] with request [" + request + "]...");
-        }
+        LOG.trace("Creating queue [{}] with request [{}]...", configuration.getQueueName(), request);
         
         CreateQueueResult queueResult = client.createQueue(request);
         queueUrl = queueResult.getQueueUrl();
         
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Queue created and available at: " + queueUrl);
-        }
+        LOG.trace("Queue created and available at: {}", queueUrl);
     }
 
     @Override
@@ -136,7 +131,11 @@ public class SqsEndpoint extends ScheduledPollEndpoint {
      */
     AmazonSQSClient createClient() {
         AWSCredentials credentials = new BasicAWSCredentials(configuration.getAccessKey(), configuration.getSecretKey());
-        return new AmazonSQSClient(credentials);
+        AmazonSQSClient client = new AmazonSQSClient(credentials);
+        if (configuration.getAmazonSQSEndpoint() != null) {
+            client.setEndpoint(configuration.getAmazonSQSEndpoint());
+        }
+        return client;
     }
 
     protected String getQueueUrl() {

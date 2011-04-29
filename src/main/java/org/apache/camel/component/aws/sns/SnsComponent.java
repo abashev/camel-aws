@@ -21,57 +21,34 @@ import java.util.Map;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
-import org.apache.camel.util.ObjectHelper;
 
 /**
- * Standard component that creates SNSEndpoints given a uri and params.
- *
+ * Defines the <a href="http://aws.amazon.com/sns/">AWS SNS Component</a> 
  */
 public class SnsComponent extends DefaultComponent {
-
-    private static final String TOPIC_NAME = "topicName/";
-
-    private SnsConfiguration configuration;
-
+    
     public SnsComponent() {
         super();
-        configuration = new SnsConfiguration();
     }
 
     public SnsComponent(CamelContext context) {
         super(context);
-        configuration = new SnsConfiguration();
     }
 
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        // must use copy as each endpoint can have different options
-        ObjectHelper.notNull(configuration, "config");
-        SnsConfiguration config = configuration.copy();
+        SnsConfiguration configuration = new SnsConfiguration();
+        setProperties(configuration, parameters);
 
-        setProperties(config, parameters);
+        if (remaining == null || remaining.trim().length() == 0) {
+            throw new IllegalArgumentException("Topic name must be specified.");
+        }
+        configuration.setTopicName(remaining);
 
-        if (remaining == null) {
-            throw new IllegalArgumentException("Topic name or ARN must be specified.");
+        if (configuration.getAmazonSNSClient() == null && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
+            throw new IllegalArgumentException("AmazonSNSClient or accessKey and secretKey must be specified");
         }
 
-        if (remaining.startsWith("arn:aws")) {
-            config.setTopicArn(remaining);
-        } else {
-            if (remaining.startsWith(TOPIC_NAME)) {
-                // topic name is everything after 'topicName/'
-                config.setTopicName(remaining.substring(TOPIC_NAME.length()));
-            } else {
-                throw new IllegalArgumentException("Topic name or ARN must be specified. URI didn't begin with 'topicName/' or 'arn:aws'");
-            }
-        }
-
-        if (config.getAmazonSNSClient() == null && (config.getAccessKey() == null || config.getSecretKey() == null)) {
-            throw new IllegalArgumentException("AmazonSNSClient or accessKey and secretKey must be set");
-        }
-
-        SnsEndpoint endpoint = new SnsEndpoint(uri, getCamelContext(), config);
-        endpoint.setConsumerProperties(parameters);
+        SnsEndpoint endpoint = new SnsEndpoint(uri, getCamelContext(), configuration);
         return endpoint;
     }
-
 }

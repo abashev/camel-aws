@@ -21,50 +21,71 @@ import com.amazonaws.services.sns.model.PublishResult;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.apache.camel.Message;
+import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.impl.DefaultProducer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+
+/**
+ * A Producer which sends messages to the Amazon Web Service Simple Notification Service
+ * <a href="http://aws.amazon.com/sns/">AWS SNS</a>
+ */
 public class SnsProducer extends DefaultProducer {
 
-    private static final Log LOG = LogFactory.getLog(SnsProducer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SnsProducer.class);
 
     public SnsProducer(Endpoint endpoint) {
         super(endpoint);
     }
 
     public void process(Exchange exchange) throws Exception {
+        PublishRequest request = new PublishRequest();
+        request.setTopicArn(getConfiguration().getTopicArn());
+        request.setMessage(exchange.getIn().getBody(String.class));
+        request.setSubject(determineSubject(exchange));
+        
+        LOG.trace("Sending request [{}] from exchange [{}]...", request, exchange);
+        
+        PublishResult result = getEndpoint().getSNSClient().publish(request);
 
-        SnsEndpoint endpoint = (SnsEndpoint) getEndpoint();
+        LOG.trace("Received result [{}]", result);
+        
+        Message message = getMessageForResponse(exchange);
+        message.setHeader(SnsConstants.MESSAGE_ID, result.getMessageId());
+    }
+    
+    private Message getMessageForResponse(Exchange exchange) {
+        if (exchange.getPattern().isOutCapable()) {
+            Message out = exchange.getOut();
+            out.copyFrom(exchange.getIn());
+            return out;
+        }
+        
+        return exchange.getIn();
+    }
 
-        String topicArn = endpoint.getTopicArn();
-
-        String subject = (String) exchange.getIn().getHeader(SnsConstants.SNS_SUBJECT);
+    private String determineSubject(Exchange exchange) {
+        String subject = exchange.getIn().getHeader(SnsConstants.SUBJECT, String.class);
         if (subject == null) {
-            subject = endpoint.getConfiguration().getSubject();
+            subject = getConfiguration().getSubject();
         }
-        String message = exchange.getIn().getBody(String.class);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("producing aws-sns message: subject | message=" + subject + " | " + message);
-        }
-
-        PublishRequest pubReq = new PublishRequest().withTopicArn(topicArn).withMessage(message).withSubject(subject);
-        PublishResult result = endpoint.getClient().publish(pubReq);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("publish result:" + result.getMessageId());
-        }
+        
+        return subject;
     }
-
-    public void stop() throws Exception {
-        if (this.isStopped()) {
-            return;
-        }
-
-        LOG.debug("Stopping SnsConsumer");
-        getEndpoint().stop();
-        super.stop();
+    
+    protected SnsConfiguration getConfiguration() {
+        return getEndpoint().getConfiguration();
     }
-
+    
+    @Override
+    public String toString() {
+        return "SnsProducer[" + DefaultEndpoint.sanitizeUri(getEndpoint().getEndpointUri()) + "]";
+    }
+    
+    @Override
+    public SnsEndpoint getEndpoint() {
+        return (SnsEndpoint) super.getEndpoint();
+    }
 }

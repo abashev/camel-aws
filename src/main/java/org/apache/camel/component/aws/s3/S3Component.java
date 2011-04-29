@@ -16,37 +16,39 @@
  */
 package org.apache.camel.component.aws.s3;
 
-
 import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
+/**
+ * Defines the <a href="http://aws.amazon.com/s3/">AWS S3 Component</a> 
+ */
 public class S3Component extends DefaultComponent {
-
+    
     public S3Component() {
-        
+        super();
     }
 
     public S3Component(CamelContext context) {
         super(context);
     }
 
-    @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         S3Configuration configuration = new S3Configuration();
         setProperties(configuration, parameters);
 
-        // validate common parameters
+        if (remaining == null || remaining.trim().length() == 0) {
+            throw new IllegalArgumentException("Bucket name must be specified.");
+        }
+        configuration.setBucketName(remaining);
+
         if (configuration.getAmazonS3Client() == null && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
-            throw new IllegalArgumentException("AmazonS3Client or accessKey and secretKey must be set");
+            throw new IllegalArgumentException("AmazonS3Client or accessKey and secretKey must be specified");
         }
 
-        S3Endpoint endpoint = new S3Endpoint(uri, this, configuration);
-        endpoint.setConsumerProperties(parameters);
+        S3Endpoint endpoint = new S3Endpoint(uri, getCamelContext(), configuration);
         return endpoint;
     }
-
-
 }
