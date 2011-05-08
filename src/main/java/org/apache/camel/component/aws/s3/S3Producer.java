@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.aws.s3;
 
+import java.io.File;
 import java.io.InputStream;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -24,6 +25,7 @@ import com.amazonaws.services.s3.model.PutObjectResult;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.Message;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.impl.DefaultProducer;
@@ -43,27 +45,51 @@ public class S3Producer extends DefaultProducer {
     }
 
     public void process(Exchange exchange) throws Exception {
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        
-        PutObjectRequest putObjectRequest = new PutObjectRequest(
-                getConfiguration().getBucketName(),
-                determineKey(exchange),
-                exchange.getIn().getMandatoryBody(InputStream.class),
-                objectMetadata);
-        
+        File sourceFile = exchange.getIn().getBody(File.class);
+        InputStream sourceStream = exchange.getIn().getBody(InputStream.class);
+
+        final PutObjectRequest putObjectRequest;
+
+        if (sourceFile != null) {
+            putObjectRequest = new PutObjectRequest(
+                    getConfiguration().getBucketName(),
+                    determineKey(exchange),
+                    sourceFile
+            );
+        } else if (sourceStream != null) {
+            putObjectRequest = new PutObjectRequest(
+                    getConfiguration().getBucketName(),
+                    determineKey(exchange),
+                    sourceStream,
+                    new ObjectMetadata()
+            );
+        } else {
+            throw new InvalidPayloadException(exchange, InputStream.class);
+        }
+
         LOG.trace("Put object [{}] from exchange [{}]...", putObjectRequest, exchange);
-        
+
         PutObjectResult putObjectResult = getEndpoint().getS3Client().putObject(putObjectRequest);
 
         LOG.trace("Received result [{}]", putObjectResult);
-        
-        Message message = getMessageForResponse(exchange);
+
+        final Message message = getMessageForResponse(exchange);
+
         message.setHeader(S3Constants.E_TAG, putObjectResult.getETag());
+
         if (putObjectResult.getVersionId() != null) {
-            message.setHeader(S3Constants.VERSION_ID, putObjectResult.getVersionId());            
+            message.setHeader(S3Constants.VERSION_ID, putObjectResult.getVersionId());
+        }
+
+        if (getConfiguration().isDeleteAfterUpload() && (sourceFile != null)) {
+            sourceFile.delete();
+
+            if (exchange.getPattern().isOutCapable()) {
+                exchange.getOut().setBody(null);
+            }
         }
     }
-    
+
     private String determineKey(Exchange exchange) {
         String key = exchange.getIn().getHeader(S3Constants.KEY, String.class);
         if (key == null) {
@@ -78,19 +104,19 @@ public class S3Producer extends DefaultProducer {
             out.copyFrom(exchange.getIn());
             return out;
         }
-        
+
         return exchange.getIn();
     }
-    
+
     protected S3Configuration getConfiguration() {
         return getEndpoint().getConfiguration();
     }
-    
+
     @Override
     public String toString() {
         return "S3Producer[" + DefaultEndpoint.sanitizeUri(getEndpoint().getEndpointUri()) + "]";
     }
-    
+
     @Override
     public S3Endpoint getEndpoint() {
         return (S3Endpoint) super.getEndpoint();

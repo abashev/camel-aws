@@ -20,27 +20,28 @@ import com.amazonaws.services.s3.AmazonS3Client;
 
 /**
  * The AWS S3 component configuration properties
- * 
+ *
  */
 public class S3Configuration implements Cloneable {
 
     private String accessKey;
     private String secretKey;
     private AmazonS3Client amazonS3Client;
-    
+
     private String bucketName;
     private String region;
     private boolean deleteAfterRead = true;
+    private boolean deleteAfterUpload = false;
     private String amazonS3Endpoint;
-    
+
     public void setAmazonS3Endpoint(String amazonS3Endpoint) {
         this.amazonS3Endpoint = amazonS3Endpoint;
     }
-    
+
     public String getAmazonS3Endpoint() {
         return amazonS3Endpoint;
     }
-    
+
     public String getAccessKey() {
         return accessKey;
     }
@@ -56,7 +57,7 @@ public class S3Configuration implements Cloneable {
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
     }
-    
+
     public AmazonS3Client getAmazonS3Client() {
         return amazonS3Client;
     }
@@ -87,5 +88,19 @@ public class S3Configuration implements Cloneable {
 
     public void setDeleteAfterRead(boolean deleteAfterRead) {
         this.deleteAfterRead = deleteAfterRead;
+    }
+
+    /**
+     * @return the deleteAfterUpload
+     */
+    public boolean isDeleteAfterUpload() {
+        return deleteAfterUpload;
+    }
+
+    /**
+     * @param deleteAfterUpload the deleteAfterUpload to set
+     */
+    public void setDeleteAfterUpload(boolean deleteAfterUpload) {
+        this.deleteAfterUpload = deleteAfterUpload;
     }
 }
