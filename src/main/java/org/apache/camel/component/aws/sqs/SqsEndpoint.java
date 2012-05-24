@@ -36,13 +36,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Defines the <a href="http://camel.apache.org/aws.html">AWS SQS Endpoint</a>.  
+ * Defines the <a href="http://camel.apache.org/aws.html">AWS SQS Endpoint</a>.
  *
  */
 public class SqsEndpoint extends ScheduledPollEndpoint {
-    
+
     private static final transient Logger LOG = LoggerFactory.getLogger(SqsEndpoint.class);
-    
+
     private AmazonSQSClient client;
     private String queueUrl;
     private SqsConfiguration configuration;
@@ -51,6 +51,10 @@ public class SqsEndpoint extends ScheduledPollEndpoint {
     public SqsEndpoint(String uri, SqsComponent component, SqsConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
+
+        if (configuration.getMaxMessagesPerPoll() != null) {
+            setMaxMessagesPerPoll(configuration.getMaxMessagesPerPoll());
+        }
     }
 
     public Producer createProducer() throws Exception {
@@ -71,16 +75,16 @@ public class SqsEndpoint extends ScheduledPollEndpoint {
     protected void doStart() throws Exception {
         client = getConfiguration().getAmazonSQSClient() != null
                 ? getConfiguration().getAmazonSQSClient() : getClient();
-        
+
         // creates a new queue, or returns the URL of an existing one
         CreateQueueRequest request = new CreateQueueRequest(configuration.getQueueName());
         request.setDefaultVisibilityTimeout(getConfiguration().getDefaultVisibilityTimeout() != null ? getConfiguration().getDefaultVisibilityTimeout() : null);
-        
+
         LOG.trace("Creating queue [{}] with request [{}]...", configuration.getQueueName(), request);
-        
+
         CreateQueueResult queueResult = client.createQueue(request);
         queueUrl = queueResult.getQueueUrl();
-        
+
         LOG.trace("Queue created and available at: {}", queueUrl);
     }
 
@@ -102,7 +106,7 @@ public class SqsEndpoint extends ScheduledPollEndpoint {
         message.setHeader(SqsConstants.MD5_OF_BODY, msg.getMD5OfBody());
         message.setHeader(SqsConstants.RECEIPT_HANDLE, msg.getReceiptHandle());
         message.setHeader(SqsConstants.ATTRIBUTES, msg.getAttributes());
-        
+
         return exchange;
     }
 
@@ -113,14 +117,14 @@ public class SqsEndpoint extends ScheduledPollEndpoint {
     public void setConfiguration(SqsConfiguration configuration) {
         this.configuration = configuration;
     }
-    
+
     public AmazonSQSClient getClient() {
         if (client == null) {
             client = createClient();
         }
         return client;
     }
-    
+
     public void setClient(AmazonSQSClient client) {
         this.client = client;
     }
@@ -141,7 +145,7 @@ public class SqsEndpoint extends ScheduledPollEndpoint {
     protected String getQueueUrl() {
         return queueUrl;
     }
-    
+
     public int getMaxMessagesPerPoll() {
         return maxMessagesPerPoll;
     }

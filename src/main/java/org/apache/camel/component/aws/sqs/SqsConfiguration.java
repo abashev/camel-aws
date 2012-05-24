@@ -34,10 +34,11 @@ public class SqsConfiguration implements Cloneable {
     private String amazonSQSEndpoint;
 
     // consumer properties
-    private Boolean deleteAfterRead = Boolean.TRUE;
+    private Boolean deleteAfterRead = true;
     private Integer visibilityTimeout;
     private Collection<String> attributeNames;
     private Integer defaultVisibilityTimeout;
+    private Integer maxMessagesPerPoll;
 
     public void setAmazonSQSEndpoint(String amazonSQSEndpoint) {
         this.amazonSQSEndpoint = amazonSQSEndpoint;
@@ -111,6 +112,20 @@ public class SqsConfiguration implements Cloneable {
         this.defaultVisibilityTimeout = defaultVisibilityTimeout;
     }
 
+    /**
+     * @return the maxMessagesPerPoll
+     */
+    public Integer getMaxMessagesPerPoll() {
+        return maxMessagesPerPoll;
+    }
+
+    /**
+     * @param maxMessagesPerPoll the maxMessagesPerPoll to set
+     */
+    public void setMaxMessagesPerPoll(Integer maxMessagesPerPoll) {
+        this.maxMessagesPerPoll = maxMessagesPerPoll;
+    }
+
     @Override
     public String toString() {
         return "SqsConfiguration[queueName=" + queueName
@@ -121,6 +136,7 @@ public class SqsConfiguration implements Cloneable {
             + ", visibilityTimeout=" + visibilityTimeout
             + ", attributeNames=" + attributeNames
             + ", defaultVisibilityTimeout=" + defaultVisibilityTimeout
+            + ", maxMessagesPerPoll=" + maxMessagesPerPoll
             + "]";
     }
 
