@@ -14,7 +14,7 @@ import com.amazonaws.auth.AWSCredentials;
  */
 public class SesConfiguration extends MailConfiguration {
     private final Logger log = LoggerFactory.getLogger(SesConfiguration.class);
-    
+
     private AWSCredentials credentials;
     private String accessKey;
     private String secretKey;
@@ -26,21 +26,21 @@ public class SesConfiguration extends MailConfiguration {
     public String getAccessKey() {
         return accessKey;
     }
-    
+
     /**
      * @param accessKey the accessKey to set
      */
     public void setAccessKey(String accessKey) {
         this.accessKey = accessKey;
     }
-    
+
     /**
      * @return the secretKey
      */
     public String getSecretKey() {
         return secretKey;
     }
-    
+
     /**
      * @param secretKey the secretKey to set
      */
@@ -83,7 +83,7 @@ public class SesConfiguration extends MailConfiguration {
     protected JavaMailSenderImpl createJavaMailSender() {
         final String access;
         final String secret;
-        
+
         if (credentials != null) {
             access = credentials.getAWSAccessKeyId();
             secret = credentials.getAWSSecretKey();
@@ -91,12 +91,12 @@ public class SesConfiguration extends MailConfiguration {
             access = accessKey;
             secret = secretKey;
         }
-        
+
         log.debug(
                 "Initalize new AmazonSESMailSender with [access={},secret=*****,endpoint={}]",
                 access, httpsEndpoint
         );
-        
+
         return (new AmazonSESMailSender(access, secret, httpsEndpoint));
     }
 
@@ -104,7 +104,17 @@ public class SesConfiguration extends MailConfiguration {
      * @see org.apache.camel.component.mail.MailConfiguration#setJavaMailSender(org.springframework.mail.javamail.JavaMailSender)
      */
     @Override
-    public void setJavaMailSender(JavaMailSender javaMailSender) {
+    public final void setJavaMailSender(JavaMailSender javaMailSender) {
         // Block from redefine JavaMailSender
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.camel.component.mail.MailConfiguration#getJavaMailSender()
+     */
+    @Override
+    public final JavaMailSender getJavaMailSender() {
+        // Block from redefine JavaMailSender
+
+        return null;
     }
 }
