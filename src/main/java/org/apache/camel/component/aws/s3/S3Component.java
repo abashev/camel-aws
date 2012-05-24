@@ -23,10 +23,11 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
 /**
- * Defines the <a href="http://aws.amazon.com/s3/">AWS S3 Component</a> 
+ * Defines the <a href="http://aws.amazon.com/s3/">AWS S3 Component</a>
  */
 public class S3Component extends DefaultComponent {
-    
+    private S3Configuration defaultConfig = null;
+
     public S3Component() {
         super();
     }
@@ -36,7 +37,8 @@ public class S3Component extends DefaultComponent {
     }
 
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        S3Configuration configuration = new S3Configuration();
+        S3Configuration configuration = getNewConfig();
+
         setProperties(configuration, parameters);
 
         if (remaining == null || remaining.trim().length() == 0) {
@@ -50,5 +52,23 @@ public class S3Component extends DefaultComponent {
 
         S3Endpoint endpoint = new S3Endpoint(uri, getCamelContext(), configuration);
         return endpoint;
+    }
+
+    /**
+     * @return the defaultConfig
+     */
+    public S3Configuration getNewConfig() {
+        if (defaultConfig != null) {
+            return defaultConfig.clone();
+        } else {
+            return new S3Configuration();
+        }
+    }
+
+    /**
+     * @param defaultConfig the defaultConfig to set
+     */
+    public void setDefaultConfig(S3Configuration defaultConfig) {
+        this.defaultConfig = defaultConfig;
     }
 }

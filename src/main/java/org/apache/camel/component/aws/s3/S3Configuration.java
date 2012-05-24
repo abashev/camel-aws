@@ -103,4 +103,16 @@ public class S3Configuration implements Cloneable {
     public void setDeleteAfterUpload(boolean deleteAfterUpload) {
         this.deleteAfterUpload = deleteAfterUpload;
     }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public S3Configuration clone() {
+        try {
+            return (S3Configuration) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Something terrible happens with clone");
+        }
+    }
 }
