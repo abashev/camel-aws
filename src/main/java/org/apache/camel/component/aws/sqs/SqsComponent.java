@@ -23,11 +23,12 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
 /**
- * Defines the <a href="http://camel.apache.org/aws.html">AWS Component</a> 
- * 
+ * Defines the <a href="http://camel.apache.org/aws.html">AWS Component</a>
+ *
  */
 public class SqsComponent extends DefaultComponent {
-    
+    private SqsConfiguration defaultConfig = null;
+
     public SqsComponent() {
     }
 
@@ -37,7 +38,8 @@ public class SqsComponent extends DefaultComponent {
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        SqsConfiguration configuration = new SqsConfiguration();
+        SqsConfiguration configuration = getNewConfig();
+
         setProperties(configuration, parameters);
 
         if (remaining == null || remaining.trim().length() == 0) {
@@ -52,5 +54,20 @@ public class SqsComponent extends DefaultComponent {
         SqsEndpoint sqsEndpoint = new SqsEndpoint(uri, this, configuration);
         sqsEndpoint.setConsumerProperties(parameters);
         return sqsEndpoint;
+    }
+
+    protected SqsConfiguration getNewConfig() {
+        if (defaultConfig != null) {
+            return defaultConfig.clone();
+        } else {
+            return new SqsConfiguration();
+        }
+    }
+
+    /**
+     * @param defaultConfig the defaultConfig to set
+     */
+    public void setDefaultConfig(SqsConfiguration defaultConfig) {
+        this.defaultConfig = defaultConfig;
     }
 }

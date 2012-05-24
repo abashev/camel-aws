@@ -22,9 +22,9 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 
 /**
  * The AWS SQS component configuration properties
- * 
+ *
  */
-public class SqsConfiguration {
+public class SqsConfiguration implements Cloneable {
 
     // common properties
     private String queueName;
@@ -32,17 +32,17 @@ public class SqsConfiguration {
     private String accessKey;
     private String secretKey;
     private String amazonSQSEndpoint;
-    
+
     // consumer properties
     private Boolean deleteAfterRead = Boolean.TRUE;
     private Integer visibilityTimeout;
     private Collection<String> attributeNames;
     private Integer defaultVisibilityTimeout;
-    
+
     public void setAmazonSQSEndpoint(String amazonSQSEndpoint) {
         this.amazonSQSEndpoint = amazonSQSEndpoint;
     }
-    
+
     public String getAmazonSQSEndpoint() {
         return amazonSQSEndpoint;
     }
@@ -86,7 +86,7 @@ public class SqsConfiguration {
     public void setAmazonSQSClient(AmazonSQSClient amazonSQSClient) {
         this.amazonSQSClient = amazonSQSClient;
     }
-    
+
     public Integer getVisibilityTimeout() {
         return visibilityTimeout;
     }
@@ -94,7 +94,7 @@ public class SqsConfiguration {
     public void setVisibilityTimeout(Integer visibilityTimeout) {
         this.visibilityTimeout = visibilityTimeout;
     }
-    
+
     public Collection<String> getAttributeNames() {
         return attributeNames;
     }
@@ -102,7 +102,7 @@ public class SqsConfiguration {
     public void setAttributeNames(Collection<String> attributeNames) {
         this.attributeNames = attributeNames;
     }
-    
+
     public Integer getDefaultVisibilityTimeout() {
         return defaultVisibilityTimeout;
     }
@@ -116,11 +116,23 @@ public class SqsConfiguration {
         return "SqsConfiguration[queueName=" + queueName
             + ", amazonSQSClient=" + amazonSQSClient
             + ", accessKey=" + accessKey
-            + ", secretKey=xxxxxxxxxxxxxxx" 
+            + ", secretKey=*****"
             + ", deleteAfterRead=" + deleteAfterRead
             + ", visibilityTimeout=" + visibilityTimeout
             + ", attributeNames=" + attributeNames
             + ", defaultVisibilityTimeout=" + defaultVisibilityTimeout
             + "]";
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public SqsConfiguration clone() {
+        try {
+            return (SqsConfiguration) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Something terrible happend with clone");
+        }
     }
 }

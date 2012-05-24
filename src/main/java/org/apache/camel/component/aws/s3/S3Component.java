@@ -57,7 +57,7 @@ public class S3Component extends DefaultComponent {
     /**
      * @return the defaultConfig
      */
-    public S3Configuration getNewConfig() {
+    protected S3Configuration getNewConfig() {
         if (defaultConfig != null) {
             return defaultConfig.clone();
         } else {

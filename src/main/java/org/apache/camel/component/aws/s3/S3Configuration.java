@@ -104,6 +104,18 @@ public class S3Configuration implements Cloneable {
         this.deleteAfterUpload = deleteAfterUpload;
     }
 
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "S3Configuration [accessKey=" + accessKey + ", secretKey=*****, amazonS3Client="
+                + amazonS3Client + ", bucketName=" + bucketName + ", region=" + region + ", deleteAfterRead="
+                + deleteAfterRead + ", deleteAfterUpload=" + deleteAfterUpload + ", amazonS3Endpoint="
+                + amazonS3Endpoint + "]";
+    }
+
     /* (non-Javadoc)
      * @see java.lang.Object#clone()
      */
@@ -112,7 +124,7 @@ public class S3Configuration implements Cloneable {
         try {
             return (S3Configuration) super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Something terrible happens with clone");
+            throw new RuntimeException("Something terrible happend with clone");
         }
     }
 }
