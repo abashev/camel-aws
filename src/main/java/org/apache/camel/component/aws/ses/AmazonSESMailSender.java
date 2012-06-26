@@ -16,9 +16,9 @@ import com.amazonaws.services.simpleemail.AWSJavaMailTransport;
 
 /**
  * Spring JavaMailSender extension for using Amazon Simple Mail Service as transport.
- * 
+ *
  * Code snippet I took from https://github.com/ryanlea/spring-amazon-services
- *   
+ *
  * @author <A href="mailto:abashev at gmail dot com">Alexey Abashev</A>
  * @version $Id$
  */
@@ -28,21 +28,27 @@ public class AmazonSESMailSender extends JavaMailSenderImpl {
     /**
      * @param accessKey
      * @param secretKey
+     */
+    public AmazonSESMailSender(String accessKey, String secretKey) {
+        this(accessKey, secretKey, null);
+    }
+
+    /**
+     * @param accessKey
+     * @param secretKey
      * @param httpsEndpoint
      */
     public AmazonSESMailSender(String accessKey, String secretKey, String httpsEndpoint) {
-        super();
-
         Properties props = getJavaMailProperties();
-        
+
         props.setProperty(MAIL_TRANSPORT_PROTOCOL_KEY, "aws");
         props.setProperty(AWS_ACCESS_KEY_PROPERTY, accessKey);
         props.setProperty(AWS_SECRET_KEY_PROPERTY, secretKey);
-        
+
         if (httpsEndpoint != null) {
             props.setProperty(AWS_EMAIL_SERVICE_ENDPOINT_PROPERTY, httpsEndpoint);
         }
-        
+
         // set port to -1 to ensure that spring calls the equivalent of transport.connect().
         setPort(-1);
     }
